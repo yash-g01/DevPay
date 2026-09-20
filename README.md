@@ -113,22 +113,22 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 
 ### **Installation & Run**
 
-> 1. Clone the repository:  
+ 1. Clone the repository:  
     ```Bash  
     git clone https://github.com/yash-g01/devpay.git  
     cd devpay/devpay-frontend
     ```
 
-> 2. Install dependencies:  
+ 2. Install dependencies:  
     ```Bash  
     npm install
     ```
-> 3. Start the Vite development server with local network access:  
+ 3. Start the Vite development server with local network access:  
     ```Bash  
     npm run dev \-- \--host
     ```
 
-> 4. Open the displayed **Network URL** (e.g., http://192.168.x.x:5173 on your desktop browser to enable smartphone QR scanning across your local Wi-Fi.
+ 4. Open the displayed **Network URL** (e.g., http://192.168.x.x:5173 on your desktop browser to enable smartphone QR scanning across your local Wi-Fi.
 
 ## **AWS Deployment Guide**
 
