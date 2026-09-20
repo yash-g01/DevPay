@@ -123,7 +123,7 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 >    Bash  
 >    npm run dev \-- \--host
 
-> 4. Open the displayed **Network URL** (e.g., \[http://192.168.\](http://192.168.)x.x:5173) on your desktop browser to enable smartphone QR scanning across your local Wi-Fi.
+> 4. Open the displayed **Network URL** (e.g., http://192.168.x.x:5173 on your desktop browser to enable smartphone QR scanning across your local Wi-Fi.
 
 ## **AWS Deployment Guide**
 
