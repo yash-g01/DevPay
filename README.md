@@ -30,18 +30,18 @@ Integrating mobile UPI payments in India typically forces developers through day
 ```Plaintext
 devpay/  
 ├── backend/  
-│   └── lambda-function.py     \# AWS Lambda routing, DynamoDB operations & webhook engine  
-├── devpay-frontend/           \# React \+ Vite \+ Tailwind CSS frontend application  
+│   └── lambda-function.py     # AWS Lambda routing, DynamoDB operations & webhook engine  
+├── devpay-frontend/           # React + Vite + Tailwind CSS frontend application  
 │   ├── public/  
 │   │   └── icon.png  
 │   ├── src/  
 │   │   ├── assets/  
 │   │   ├── types/  
-│   │   │   └── payment.ts     \# Type interfaces & UPI app handler targets  
-│   │   ├── App.tsx            \# Gateway demo & Sandbox routing logic  
-│   │   ├── config.ts          \# API Gateway invocation endpoint  
-│   │   ├── DevPayGateway.tsx  \# Cross-device checkout modal & polling client  
-│   │   ├── DevPaySandbox.tsx  \# Interactive payload compiler & testing dashboard  
+│   │   │   └── payment.ts     # Type interfaces & UPI app handler targets  
+│   │   ├── App.tsx            # Gateway demo & Sandbox routing logic  
+│   │   ├── config.ts          # API Gateway invocation endpoint  
+│   │   ├── DevPayGateway.tsx  # Cross-device checkout modal & polling client  
+│   │   ├── DevPaySandbox.tsx  # Interactive payload compiler & testing dashboard  
 │   │   ├── index.css  
 │   │   └── main.tsx  
 │   ├── index.html  
@@ -55,18 +55,18 @@ devpay/
 
 Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 
-### **1\. Create Payment Intent**
+### **1. Create Payment Intent**
 
 * **Method:** POST  
 * **Path:** /intents  
 * **Request Body:**  
   ```JSON  
   {  
-   "id": "TXN\_123456",  
+   "id": "TXN_123456",  
    "pa": "merchant@okaxis",  
    "pn": "Demo Store",  
    "am": "100.00",  
-   "tn": "Order \#42",  
+   "tn": "Order #42",  
    "webhookUrl": "https://httpbin.org/post"  
   }
   ```
@@ -80,11 +80,11 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 * **Response:** 200 OK  
   ```JSON  
   {  
-   "id": "TXN\_123456",  
+   "id": "TXN_123456",  
    "pa": "merchant@okaxis",  
    "pn": "Demo Store",  
    "am": "100.00",  
-   "tn": "Order \#42",  
+   "tn": "Order #42",  
    "status": "PENDING",  
    "createdAt": "2026-09-20T12:00:00.000000"  
   }
@@ -98,9 +98,9 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
   ```JSON  
   {  
    "success": true,  
-   "id": "TXN\_123456",  
+   "id": "TXN_123456",  
    "status": "SUCCESS",  
-   "webhook": "DELIVERED\_200"  
+   "webhook": "DELIVERED_200"  
   }
   ```
 
@@ -125,7 +125,7 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
     ```
  3. Start the Vite development server with local network access:  
     ```Bash  
-    npm run dev \-- \--host
+    npm run dev -- --host
     ```
 
  4. Open the displayed **Network URL** (e.g., http://192.168.x.x:5173 on your desktop browser to enable smartphone QR scanning across your local Wi-Fi.
