@@ -28,14 +28,15 @@ export function App() {
         console.error('Failed to parse cached params', e);
       }
 
+      // Inside useEffect in src/App.tsx:
       setDemoParams({
-        pa: parsed?.pa || params.get('pa') || 'merchant@okaxis',
-        pn: parsed?.pn || params.get('pn') || 'DevPay Demo Merchant',
-        am: parsed?.am || params.get('am') || '10.00',
-        tr: parsed?.tr || params.get('tr') || 'TXN_123456',
-        tn: parsed?.tn || params.get('tn') || 'DevPay sandbox testing',
-        mc: parsed?.mc || params.get('mc') || '5411',
-        webhookUrl: parsed?.webhookUrl || params.get('webhookUrl') || '',
+        pa: params.get('pa') || parsed?.pa || 'merchant@okaxis',
+        pn: params.get('pn') || parsed?.pn || 'DevPay Demo Merchant',
+        am: params.get('am') || parsed?.am || '10.00',
+        tr: params.get('tr') || parsed?.tr || 'TXN_123456',
+        tn: params.get('tn') || parsed?.tn || 'DevPay sandbox testing',
+        mc: params.get('mc') || parsed?.mc || '5411',
+        webhookUrl: params.get('webhookUrl') || parsed?.webhookUrl || '',
       });
     }
   }, []);

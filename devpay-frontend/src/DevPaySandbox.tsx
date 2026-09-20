@@ -59,7 +59,7 @@ export const DevPaySandbox: React.FC = () => {
     }
 
     if (selectedPlatform === 'android' && app.packageId) {
-      return `intent://pay?${queryString}#Intent;scheme=upi;package=${app.packageId};end`;
+      return `intent://pay?${queryString}#Intent;scheme=upi;package=${app.packageId};action=android.intent.action.VIEW;end`;
     } else if (selectedPlatform === 'ios' && app.prefix) {
       return `${app.prefix}://pay?${queryString}`;
     }
@@ -347,11 +347,11 @@ export default DevPayGateway;
                 {/* Android Intent Pill */}
                 <button
                   type="button"
-                  disabled={selectedApp === 'amazon'}
+                  disabled={selectedApp === 'amazon' || selectedApp === 'phonepe'}
                   onClick={() => setSelectedPlatform('android')}
-                  title={selectedApp === 'amazon' ? 'Amazon intent not available for android (We are working on it)' : undefined}
+                  title={selectedApp === 'amazon' || selectedApp === 'phonepe' ? 'Amazon and PhonePe intent not available for android (We are working on it)' : undefined}
                   className={`px-3 py-1 text-xs font-mono rounded-md transition-all ${
-                    selectedApp === 'amazon'
+                    selectedApp === 'amazon' || selectedApp === 'phonepe'
                       ? 'opacity-30 cursor-not-allowed text-zinc-600'
                       : selectedPlatform === 'android'
                       ? 'bg-zinc-800 text-[#ff5722] font-semibold border border-[#ff5722]/40 shadow-sm'
@@ -395,7 +395,7 @@ export default DevPayGateway;
                       if (app.id === 'generic' && selectedPlatform === 'ios') {
                         setSelectedPlatform('android');
                       }
-                      if (app.id === 'amazon' && selectedPlatform === 'android') {
+                      if (app.id === 'amazon' && selectedPlatform === 'android' || app.id === 'phonepe' && selectedPlatform === 'android') {
                         setSelectedPlatform('ios'); // Amazon intent not available for Android, switch to iOS
                       }
                     }}

@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { Terminal, CheckCircle2, XCircle, Smartphone, ArrowLeft, ShieldCheck, Loader2 } from 'lucide-react';
+import { Terminal, CheckCircle2, XCircle, Smartphone, ArrowLeft, ShieldCheck, Loader2, QrCode as QrIcon, Radio, AlertTriangle } from 'lucide-react';
 import { isIOS, isAndroid } from 'react-device-detect';
 import { API_BASE_URL } from './config';
 
@@ -28,25 +28,9 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
   const [showQRMobile, setShowQRMobile] = useState(!isMobileClient);
   const [status, setStatus] = useState<'IDLE' | 'SUCCESS' | 'FAILED'>('IDLE');
   const [isSimulating, setIsSimulating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [webhookDelivery, setWebhookDelivery] = useState<string | null>(null);
-
-  const handleSimulateSuccess = async () => {
-    setIsSimulating(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/intents/${tr}/simulate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      setWebhookDelivery(data.webhook || 'DELIVERED');
-      setStatus('SUCCESS');
-    } catch (err) {
-      console.error('Simulation error:', err);
-      setStatus('SUCCESS'); // Fallback to success UI even if network glitch
-    } finally {
-      setIsSimulating(false);
-    }
-  };
+  const [desktopTab, setDesktopTab] = useState<'upi' | 'mobile_web'>('upi');
 
   const baseQuery = useMemo(() => {
     const params = new URLSearchParams({
@@ -62,6 +46,8 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
   }, [pa, pn, am, tr, tn, mc]);
 
   const genericUPI = `upi://pay?${baseQuery}`;
+  const currentWebUrl = typeof window !== 'undefined' ? window.location.href : genericUPI;
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   const apps = [
     { name: 'Amazon Pay', id: 'amazon', packageId: 'in.amazon.mShop.android.shopping', scheme: 'amazonpay', bgColor: 'hover:bg-orange-500/20 hover:border-orange-500' },
@@ -75,6 +61,72 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
     if (isAndroid) return `intent://pay?${baseQuery}#Intent;scheme=upi;package=${pkg};end`;
     if (isIOS) return `${scheme}://pay?${baseQuery}`;
     return genericUPI;
+  };
+
+  // GUARANTEE INTENT EXISTS IN DYNAMODB ON MOUNT
+  useEffect(() => {
+    if (!tr) return;
+    fetch(`${API_BASE_URL}/intents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: tr,
+        pa,
+        pn,
+        am,
+        tn,
+        webhookUrl: webhookUrl || '',
+      }),
+    }).catch((err) => console.warn('DynamoDB registration note:', err));
+  }, [tr, pa, pn, am, tn, webhookUrl]);
+
+  // Cross-device synchronization: Poll DynamoDB with query cache-busting
+  useEffect(() => {
+    if (status !== 'IDLE' || !tr) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/intents/${tr}?_cb=${Date.now()}`);
+
+        if (res.ok) {
+          const data = await res.json();
+          console.log(`[DevPay Sync] Checking: ${tr} | Status:`, data?.status);
+          if (data && data.status === 'SUCCESS') {
+            setWebhookDelivery('SYNCED_VIA_DYNAMODB');
+            setStatus('SUCCESS');
+          }
+        }
+      } catch (e) {
+        console.debug('Polling wait...', e);
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [status, tr]);
+
+  const handleSimulateSuccess = async () => {
+    setIsSimulating(true);
+    setErrorMessage(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/intents/${tr}/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server returned HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setWebhookDelivery(data.webhook || 'DELIVERED');
+      setStatus('SUCCESS');
+    } catch (err: any) {
+      console.error('Simulation error:', err);
+      setErrorMessage(err.message || 'Failed to update DynamoDB');
+    } finally {
+      setIsSimulating(false);
+    }
   };
 
   return (
@@ -94,7 +146,7 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
             <span className="font-bold text-sm tracking-tight text-white">Dev<span className="text-[#ff5722]">Pay</span> Checkout</span>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-400">
-            TEST MODE
+            SYNC ACTIVE
           </span>
         </div>
 
@@ -174,8 +226,8 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
                   </div>
 
                   <a
-                    href={genericUPI}
-                    className="w-full py-2.5 bg-[#ff5722] hover:bg-orange-600 text-white font-medium rounded-xl text-sm flex items-center justify-center transition-all shadow-md shadow-[#ff5722]/20"
+                  href={genericUPI}
+                  className="w-full py-2.5 bg-[#ff5722] hover:bg-orange-600 text-white font-medium rounded-xl text-sm flex items-center justify-center transition-all shadow-md shadow-[#ff5722]/20"
                   >
                     Open Default UPI App
                   </a>
@@ -183,24 +235,74 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowQRMobile(true)}
-                    className="w-full text-xs text-center text-zinc-400 hover:text-zinc-200 pt-1 block"
+                    className="w-full text-sm text-center text-zinc-400 hover:text-zinc-200 pt-1 block"
                   >
                     Paying with another phone? Show QR Code
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="p-3.5 bg-white rounded-xl shadow-lg">
-                    <QRCode value={genericUPI} size={170} />
-                  </div>
-                  
-                  <div className="text-center space-y-1">
-                    <p className="text-xs font-medium text-zinc-300 flex items-center justify-center space-x-1">
+                /* DESKTOP VIEW WITH "OPEN ON MOBILE" QR TAB */
+                <div className="flex flex-col items-center space-y-3">
+                  {/* Selector Pills: UPI App QR vs Open on Mobile */}
+                  <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl w-full">
+                    <button
+                      type="button"
+                      onClick={() => setDesktopTab('upi')}
+                      className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                        desktopTab === 'upi'
+                          ? 'bg-zinc-800 text-[#ff5722] border border-[#ff5722]/30 shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <QrIcon className="w-3.5 h-3.5" />
+                      <span>UPI App QR</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDesktopTab('mobile_web')}
+                      className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                        desktopTab === 'mobile_web'
+                          ? 'bg-zinc-800 text-[#ff5722] border border-[#ff5722]/30 shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
                       <Smartphone className="w-3.5 h-3.5 text-[#ff5722]" />
-                      <span>Scan with any UPI app to pay</span>
-                    </p>
-                    <p className="text-[11px] font-mono text-zinc-500">Ref: {tr}</p>
+                      <span>Open on Mobile</span>
+                    </button>
                   </div>
+
+                  {desktopTab === 'upi' ? (
+                    <>
+                      <div className="p-3.5 bg-white rounded-xl shadow-lg mt-1">
+                        <QRCode value={genericUPI} size={155} />
+                      </div>
+                      <div className="text-center space-y-0.5">
+                        <p className="text-xs font-medium text-zinc-300">Scan with any UPI app to pay</p>
+                        <p className="text-[11px] text-zinc-500">Google Pay, PhonePe, Paytm, BHIM</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-3.5 bg-white rounded-xl shadow-lg mt-1">
+                        <QRCode value={currentWebUrl} size={155} />
+                      </div>
+                      <div className="text-center space-y-0.5 px-3">
+                        <p className="text-xs font-medium text-[#ff5722]">Scan with Phone Camera</p>
+                        <p className="text-[11px] text-zinc-400">Opens this gateway on mobile with app deep links</p>
+                        {isLocalhost ? (
+                          <div className="mt-1 p-2 rounded bg-amber-500/10 border border-amber-500/30 text-[10px] text-amber-300 text-left flex items-start space-x-1">
+                            <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                            <span><strong>Testing on localhost:</strong> Phones cannot open `localhost`. Test across two browser windows or deploy on AWS Amplify to scan with a real phone!</span>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-emerald-400 font-mono pt-1 flex items-center justify-center space-x-1">
+                            <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
+                            <span>Auto-sync active: Screen updates when paid on phone</span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   {isMobileClient && (
                     <button
@@ -212,6 +314,13 @@ export const DevPayGateway: React.FC<GatewayProps> = ({
                       <span>Back to app links</span>
                     </button>
                   )}
+                </div>
+              )}
+
+              {/* Error Message banner if DynamoDB call fails */}
+              {errorMessage && (
+                <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono">
+                  {errorMessage}
                 </div>
               )}
 
