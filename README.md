@@ -22,7 +22,7 @@ Integrating mobile UPI payments in India typically forces developers through day
   * **iOS URL Schemes:** gpay://pay?..., phonepe://pay?..., paytmmp://pay?..., bhim://pay?...  
   * **Generic UPI Fallback:** Standard upi://pay?... query string  
 * **Cross-Device State Synchronization:** Open a transaction on desktop, switch to the "Open on Mobile" tab, scan the QR with any smartphone camera, and simulate payment on mobile. The desktop screen updates to **Payment Successful** in real time via DynamoDB.  
-* **Automated Webhook Dispatch:** Enter a custom endpoint (such as \[https://webhook.site/\](https://webhook.site/)... or your backend route). When a transaction is marked as successful, Lambda executes an outbound POST request with transaction metadata.  
+* **Automated Webhook Dispatch:** Enter a custom endpoint (such as https://webhook.site/ ... or your backend route). When a transaction is marked as successful, Lambda executes an outbound POST request with transaction metadata.  
 * **Zero-Dependency Component Export:** Generate and download a standalone, customizable DevPayGateway.tsx file pre-populated with your current form inputs.
 
 ## **Repository Structure**
@@ -53,7 +53,7 @@ devpay/
 
 ## **API Reference**
 
-Base Endpoint: \[https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com\](https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com)
+Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 
 ### **1\. Create Payment Intent**
 
