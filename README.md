@@ -60,15 +60,16 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 * **Method:** POST  
 * **Path:** /intents  
 * **Request Body:**  
-  JSON  
+  ```JSON  
   {  
-  &nbsp;&nbsp;"id": "TXN\_123456",  
-  &nbsp;&nbsp;"pa": "merchant@okaxis",  
-  &nbsp;&nbsp;"pn": "Demo Store",  
-  &nbsp;&nbsp;"am": "100.00",  
-  &nbsp;&nbsp;"tn": "Order \#42",  
-  &nbsp;&nbsp;"webhookUrl": "https://httpbin.org/post"  
+   "id": "TXN\_123456",  
+   "pa": "merchant@okaxis",  
+   "pn": "Demo Store",  
+   "am": "100.00",  
+   "tn": "Order \#42",  
+   "webhookUrl": "https://httpbin.org/post"  
   }
+  ```
 
 * **Response:** 201 Created
 
@@ -77,29 +78,31 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 * **Method:** GET  
 * **Path:** /intents/{id}  
 * **Response:** 200 OK  
-  JSON  
+  ```JSON  
   {  
-  &nbsp;&nbsp;"id": "TXN\_123456",  
-  &nbsp;&nbsp;"pa": "merchant@okaxis",  
-  &nbsp;&nbsp;"pn": "Demo Store",  
-  &nbsp;&nbsp;"am": "100.00",  
-  &nbsp;&nbsp;"tn": "Order \#42",  
-  &nbsp;&nbsp;"status": "PENDING",  
-  &nbsp;&nbsp;"createdAt": "2026-09-20T12:00:00.000000"  
+   "id": "TXN\_123456",  
+   "pa": "merchant@okaxis",  
+   "pn": "Demo Store",  
+   "am": "100.00",  
+   "tn": "Order \#42",  
+   "status": "PENDING",  
+   "createdAt": "2026-09-20T12:00:00.000000"  
   }
+  ```
 
 ### **3\. Simulate Payment Success & Trigger Webhook**
 
 * **Method:** POST  
 * **Path:** /intents/{id}/simulate  
 * **Response:** 200 OK  
-  JSON  
+  ```JSON  
   {  
-  &nbsp;&nbsp;"success": true,  
-  &nbsp;&nbsp;"id": "TXN\_123456",  
-  &nbsp;&nbsp;"status": "SUCCESS",  
-  &nbsp;&nbsp;"webhook": "DELIVERED\_200"  
+   "success": true,  
+   "id": "TXN\_123456",  
+   "status": "SUCCESS",  
+   "webhook": "DELIVERED\_200"  
   }
+  ```
 
 ## **Local Development**
 
@@ -111,17 +114,19 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 ### **Installation & Run**
 
 > 1. Clone the repository:  
->    Bash  
->    git clone https://github.com/yash-g01/devpay.git  
->    cd devpay/devpay-frontend
+    ```Bash  
+    git clone https://github.com/yash-g01/devpay.git  
+    cd devpay/devpay-frontend
+    ```
 
 > 2. Install dependencies:  
->    Bash  
->    npm install
-
+    ```Bash  
+    npm install
+    ```
 > 3. Start the Vite development server with local network access:  
->    Bash  
->    npm run dev \-- \--host
+    ```Bash  
+    npm run dev \-- \--host
+    ```
 
 > 4. Open the displayed **Network URL** (e.g., http://192.168.x.x:5173 on your desktop browser to enable smartphone QR scanning across your local Wi-Fi.
 
@@ -129,49 +134,55 @@ Base Endpoint: https://u7e7ugonq0.execute-api.us-east-1.amazonaws.com
 
 ### **DynamoDB**
 
-> 1. Create a table named devpay\_intents.  
-> 2. Set Partition Key to id (String).
+ 1. Create a table named devpay\_intents.  
+ 2. Set Partition Key to id (String).
 
 ### **AWS Lambda**
 
-> 1. Create a Lambda function with runtime **Python 3.14** (or 3.12).  
-> 2. Attach IAM Policy: AmazonDynamoDBFullAccess\_v2.  
-> 3. Copy the code from backend/lambda-function.py into the Lambda editor and click **Deploy**.
+ 1. Create a Lambda function with runtime **Python 3.14** (or 3.12).  
+ 2. Attach IAM Policy: AmazonDynamoDBFullAccess\_v2.  
+ 3. Copy the code from backend/lambda-function.py into the Lambda editor and click **Deploy**.
 
 ### **Amazon API Gateway**
 
-> 1. Create an **HTTP API** named devpay-api.  
-> 2. Add a Lambda Integration pointing to devpay-handler.  
-> 3. Configure route: ANY /{proxy+}.  
-> 4. Enable CORS:  
+ 1. Create an **HTTP API** named devpay-api.  
+ 2. Add a Lambda Integration pointing to devpay-handler.  
+ 3. Configure route: ANY /{proxy+}.  
+ 4. Enable CORS:  
    * **Access-Control-Allow-Origin:** \*  
    * **Access-Control-Allow-Methods:** GET, POST, OPTIONS  
    * **Access-Control-Allow-Headers:** Content-Type
 
 ### **AWS Amplify Hosting**
 
-> 1. Connect your GitHub repository to Amplify Hosting.  
-> 2. In build settings, point the monorepo root to devpay-frontend with build commands:  
->    YAML  
->    version: 1  
->    frontend:  
->    &nbsp;&nbsp;phases:  
->    &nbsp;&nbsp;&nbsp;&nbsp;preBuild:  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commands:  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- cd devpay-frontend  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- npm ci  
->    &nbsp;&nbsp;&nbsp;&nbsp;build:  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commands:  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- npm run build  
->    &nbsp;&nbsp;artifacts:  
->    &nbsp;&nbsp;&nbsp;&nbsp;baseDirectory: devpay-frontend/dist  
->    &nbsp;&nbsp;&nbsp;&nbsp;files:  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- '\*\*/\*'  
->    &nbsp;&nbsp;cache:  
->    &nbsp;&nbsp;&nbsp;&nbsp;paths:  
->    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\- devpay-frontend/node\_modules/\*\*/\*
-
-> 3. Under **Rewrites and redirects**, add:  
-   * **Source:** \</^\[^.\]+$|\\.(?\!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)(\[^.\]+$)/\>  
-   * **Target:** /index.html  
-   * **Status:** 200
+ 1. Connect your GitHub repository to Amplify Hosting.  
+ 2. In build settings, point the monorepo root to devpay-frontend with build commands:  
+    ```YAML  
+    version: 1
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - cd devpay-frontend
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: devpay-frontend/dist
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - devpay-frontend/node_modules/**/*
+    ```
+ 3. Under **Rewrites and redirects**, add:  
+   ```
+   [
+     {
+       "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json)$)([^.]+$)/>",
+       "status": "200",
+       "target": "/index.html"
+     }
+   ]
+   ```
