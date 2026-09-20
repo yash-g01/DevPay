@@ -11,6 +11,7 @@ export function App() {
     tr: '',
     tn: '',
     mc: '',
+    webhookUrl: '',
   });
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function App() {
         tr: parsed?.tr || params.get('tr') || 'TXN_123456',
         tn: parsed?.tn || params.get('tn') || 'DevPay sandbox testing',
         mc: parsed?.mc || params.get('mc') || '5411',
+        webhookUrl: parsed?.webhookUrl || params.get('webhookUrl') || '',
       });
     }
   }, []);

@@ -31,4 +31,5 @@ export const UPI_FIELDS: UPIField[] = [
   { key: 'tr', label: 'Txn Ref ID', paramName: 'tr', placeholder: 'TXN_123456', defaultValue: 'TXN_' + Math.floor(100000 + Math.random() * 900000), required: false, type: 'text' },
   { key: 'tn', label: 'Transaction Note', paramName: 'tn', placeholder: 'Payment for order', defaultValue: 'DevPay sandbox testing', required: false, type: 'text' },
   { key: 'mc', label: 'Merchant Category Code', paramName: 'mc', placeholder: '5411', defaultValue: '5411', required: false, type: 'text' },
+  { key: 'webhookUrl', label: 'Callback / Webhook URL', paramName: 'webhook', placeholder: 'https://webhook.site/...', defaultValue: 'https://httpbin.org/post', required: false, type: 'text' },
 ];

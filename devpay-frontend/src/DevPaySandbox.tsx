@@ -13,6 +13,7 @@ import {
   Play 
 } from 'lucide-react';
 import { isIOS, isAndroid } from 'react-device-detect';
+import { API_BASE_URL } from './config';
 
 type Platform = 'android' | 'ios';
 
@@ -85,9 +86,26 @@ export const DevPaySandbox: React.FC = () => {
   };
 
   // 1. OPEN DEMO IN NEW TAB WITH CURRENT FORM VALUES
-  const handleTryDemo = () => {
-    // Save current active input state to localStorage so new tab reads it instantly
+  const handleTryDemo = async () => {
     localStorage.setItem('devpay_live_params', JSON.stringify(formData));
+
+    // Save session to DynamoDB via AWS Lambda
+    try {
+      await fetch(`${API_BASE_URL}/intents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: formData['tr'] || `TXN_${Date.now()}`,
+          pa: formData['pa'],
+          pn: formData['pn'],
+          am: formData['am'],
+          tn: formData['tn'],
+          webhookUrl: formData['webhookUrl'],
+        }),
+      });
+    } catch (err) {
+      console.warn('Backend sync warning:', err);
+    }
 
     const params = new URLSearchParams({
       demo: 'true',
@@ -97,8 +115,8 @@ export const DevPaySandbox: React.FC = () => {
       tr: formData['tr'] || '',
       tn: formData['tn'] || '',
       mc: formData['mc'] || '',
+      webhookUrl: formData['webhookUrl'] || '',
     });
-
     window.open(`/?${params.toString()}`, '_blank');
   };
 
